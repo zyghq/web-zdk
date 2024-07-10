@@ -40,9 +40,10 @@
                 windowObj.addEventListener("load", loadZygSDKWidget, false);
             }
         })();
+        window.ZygEnv = "development";
+        ZygSDK("init", { widgetId: "your-widget-id" });
     </script>
     <script>
-        ZygSDK("init", { widgetId: "your-widget-id" });
     </script>
 </head>
 
