@@ -93,6 +93,37 @@ const logger = (() => {
     isHidden = !1;
   }
 
+  function onMessageHandler(evt: MessageEvent) {
+    console.log("origin:", evt.origin);
+    console.log("source", evt.source);
+    console.log("data", evt.data);
+    if (evt.origin !== baseUrl) return;
+    if (evt.data === "close") {
+      hideZW();
+    }
+  }
+
+  function handlePageWidthChange() {
+    pageWidth = window.innerWidth;
+    var t = document.getElementById("zyg-frame"),
+      e =
+        pageWidth > 768
+          ? "width: 448px; height: 85vh; max-height: 820px;"
+          : "width: 100%; height: 100%; max-height: 100%; min-height: 100%; left: 0px; right: 0px; bottom: 0px; top: 0px;",
+      i =
+        "right" === config.bubblePosition
+          ? "right: 16px; left: unset; transform-origin: right bottom;"
+          : "left: 16px; right: unset; transform-origin: left bottom;",
+      o = isHidden
+        ? "opacity: 0 !important; transform: scale(0) !important;"
+        : "opacity: 1 !important; transform: scale(1) !important;";
+    t.style.cssText =
+      "box-shadow: rgba(150, 150, 150, 0.2) 0px 10px 30px 0px, rgba(150, 150, 150, 0.2) 0px 0px 0px 1px; overflow: hidden !important; border: none !important; display: block !important; z-index: 2147483645 !important; border-radius: 0.75rem; bottom: 96px; transition: scale 200ms ease-out 0ms, opacity 200ms ease-out 0ms; position: fixed !important;" +
+      i +
+      e +
+      o;
+  }
+
   function createZygWidget(config: WidgetConfig) {
     if (config.domainsOnly && config.domains) {
       const domains = config.domains;
@@ -259,7 +290,9 @@ const logger = (() => {
           config = c;
         })
         .then(() => {
-          createZygWidget(config);
+          createZygWidget(config),
+            window.addEventListener("message", onMessageHandler),
+            window.addEventListener("resize", handlePageWidthChange);
         })
         .catch((err) => {
           console.error("Error fetching widget config", err);
