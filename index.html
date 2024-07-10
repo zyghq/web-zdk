@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>This is the title of the webpage!</title>
+    <script>
+        (function () {
+            var windowObj = window;
+            var documentObj = document;
+
+            var ZygSDK = function () {
+                ZygSDK.enqueue(arguments);
+            };
+
+            // Initialize an empty queue
+            ZygSDK.q = [];
+
+            // Enqueue function to push events into the queue
+            ZygSDK.enqueue = function (event) {
+                ZygSDK.q.push(event);
+            };
+
+            // Assign ZygSDK function to the global window object
+            windowObj.ZygSDK = ZygSDK;
+
+            // Function to load the ZygSDK widget script
+            var loadZygSDKWidget = function () {
+                var scriptElement = documentObj.createElement("script");
+                scriptElement.setAttribute("type", "text/javascript");
+                scriptElement.setAttribute("async", "true");
+                scriptElement.setAttribute("src", "build/sdk.js");
+
+                var firstScript = documentObj.getElementsByTagName("script")[0];
+                firstScript.parentNode.insertBefore(scriptElement, firstScript);
+            };
+
+            if (documentObj.readyState === "complete") {
+                loadZygSDKWidget();
+            } else if (windowObj.addEventListener) {
+                windowObj.addEventListener("load", loadZygSDKWidget, false);
+            }
+        })();
+    </script>
+    <script>
+        ZygSDK("init", { apiKey: "your-api-key" });
+        ZygSDK("track", "pageview");
+    </script>
+</head>
+
+<body>
+    <p>
+        This is an example paragraph. Anything in the <strong>body</strong> tag
+        will appear on the page, just like this <strong>p</strong> tag and its
+        contents.
+    </p>
+
+    <script>
+        window.addEventListener('onload',
+            console.log(window.ZygSDK)
+        )
+    </script>
+</body>
+
+</html>
