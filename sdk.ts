@@ -1,5 +1,7 @@
 interface ZygSDKInstance {
   q: any[][];
+  booted: boolean;
+  widgetId: string;
   processQueue: () => void;
   executeCommand: (...args: any[]) => void;
   push: (...args: any[]) => void;
@@ -8,6 +10,7 @@ interface ZygSDKInstance {
     eventName: string,
     callback: EventListenerOrEventListenerObject
   ) => void;
+  init: (config: InitConfig) => void;
   _eventTarget: EventTarget;
   _triggerEvent: (eventName: string, data: any) => void;
 }
@@ -22,16 +25,20 @@ interface Window {
   zyged: any;
 }
 
-(function (window: Window) {
-  // Initialize the SDK
-  const sdkFn = function (): ZygSDKFunction {
-    // Create the SDK instance
+interface InitConfig {
+  widgetId: string;
+}
+
+(function () {
+  const bootZyg = function (): ZygSDKFunction {
     const instance: ZygSDKFunction = function (...args: any[]) {
       instance.push(...args);
     };
 
-    instance._eventTarget = new EventTarget();
+    instance.booted = false;
+    instance.widgetId = null;
 
+    instance._eventTarget = new EventTarget();
     instance._triggerEvent = function (eventName, data) {
       const event = new CustomEvent(eventName, { detail: data });
       this._eventTarget.dispatchEvent(event);
@@ -58,7 +65,7 @@ interface Window {
       // Implement your SDK functionality here
       switch (command) {
         case "init":
-          console.log("Initializing SDK with args:", commandArgs);
+          instance.init(commandArgs[0]);
           break;
         case "track":
           console.log("Tracking event with args:", commandArgs);
@@ -96,10 +103,26 @@ interface Window {
     // Process any queued commands
     instance.processQueue();
 
+    // Function to handle init
+    instance.init = function (config: InitConfig) {
+      if (typeof config !== "object" || !config.widgetId) {
+        throw new Error("Invalid configuration. widgetId is required.");
+      }
+      this.widgetId = config.widgetId;
+      // Simulating asynchronous initialization
+      setTimeout(() => {
+        this._triggerEvent("ready");
+        this.booted = true;
+        // Simulate authentication after a delay
+        setTimeout(() => {
+          this._triggerEvent("authenticated");
+        }, 500);
+      }, 1000);
+    };
+
     return instance;
   };
-
-  const sdk = sdkFn();
+  const sdk = bootZyg();
 
   // Process any queued events
   if (window.ZygSDK.q) {
@@ -108,4 +131,5 @@ interface Window {
     }
   }
   window.ZygSDK = sdk;
-})(window);
+  window.dispatchEvent(new Event("zygsdk:loaded"));
+})();

@@ -42,8 +42,7 @@
         })();
     </script>
     <script>
-        ZygSDK("init", { apiKey: "your-api-key" });
-        ZygSDK("track", "pageview");
+        ZygSDK("init", { widgetId: "your-widget-id" });
     </script>
 </head>
 
@@ -55,9 +54,14 @@
     </p>
 
     <script>
-        window.addEventListener('onload',
-            console.log(window.ZygSDK)
-        )
+        window.addEventListener('zygsdk:loaded', function () {
+            window.ZygSDK.on('ready', function () {
+                console.log('ZygSDK is ready!');
+            });
+            window.ZygSDK.on('authenticated', function () {
+                console.log('User is authenticated!');
+            });
+        });
     </script>
 </body>
 
