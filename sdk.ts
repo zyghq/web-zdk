@@ -1,7 +1,11 @@
 interface ZygSDKInstance {
   q: any[][];
   booted: boolean;
-  widgetId: string;
+  widgetId: string; // PK
+  customerExternalId: string | null; // P1
+  customerEmail: string | null; // P2
+  customerPhone: string | null; // P3
+  customerHash: string | null;
   processQueue: () => void;
   executeCommand: (...args: any[]) => void;
   push: (...args: any[]) => void;
@@ -27,6 +31,10 @@ interface Window {
 
 interface InitConfig {
   widgetId: string;
+  customerExternalId?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerHash?: string;
 }
 
 type BubblePosition = "left" | "right";
@@ -43,6 +51,15 @@ interface WidgetConfig {
   iconColor: string;
 }
 
+interface ZygSDKStorage {
+  widgetId: string;
+  anonId?: string;
+  customerExternalId?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  customerHash?: string;
+}
+
 const ENV = window.ZygEnv || "production";
 
 const logger = (() => {
@@ -52,6 +69,43 @@ const logger = (() => {
     return () => {}; // noop function
   }
 })();
+
+/**
+ * Sets a key-value pair in localStorage if available
+ * @param key The key to set
+ * @param value The value to set
+ * @returns true if the operation was successful, false otherwise
+ */
+function setLocalStorage(key: string, value: string): boolean {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      localStorage.setItem(key, value);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error("Error setting localStorage:", error);
+    return false;
+  }
+}
+
+/**
+ * Generates a UUID v4 (random)
+ * @returns A string representing a UUID v4
+ */
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    // Use the built-in crypto.randomUUID() if available
+    return crypto.randomUUID();
+  }
+
+  // Fallback to manual UUID generation
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 (function () {
   var config: WidgetConfig;
@@ -214,6 +268,11 @@ const logger = (() => {
     instance.booted = false;
     instance.widgetId = null;
 
+    instance.customerExternalId = null;
+    instance.customerEmail = null;
+    instance.customerPhone = null;
+    instance.customerHash = null;
+
     instance._eventTarget = new EventTarget();
     instance._triggerEvent = function (eventName, data) {
       const event = new CustomEvent(eventName, { detail: data });
@@ -282,7 +341,29 @@ const logger = (() => {
       if (typeof initConfig !== "object" || !initConfig.widgetId) {
         throw new Error("Invalid configuration. widgetId is required.");
       }
+
       this.widgetId = initConfig.widgetId;
+
+      this.customerExternalId = initConfig.customerExternalId || null;
+      this.customerEmail = initConfig.customerEmail || null;
+      this.customerPhone = initConfig.customerPhone || null;
+
+      this.customerHash = initConfig.customerHash || null;
+
+      const hasCustomerIdentifier =
+        !!this.customerExternalId ||
+        !!this.customerEmail ||
+        !!this.customerPhone;
+
+      if (hasCustomerIdentifier && !this.customerHash) {
+        throw new Error(
+          "Invalid configuration. customerHash is required when customerExternalId, customerEmail, customerPhone are provided."
+        );
+      } else if (!hasCustomerIdentifier && this.customerHash) {
+        throw new Error(
+          "Invalid configuration. customerHash is required when customerExternalId, customerEmail, customerPhone are not provided."
+        );
+      }
 
       loadWidgetConfig(this.widgetId)
         .then((c) => {
@@ -290,6 +371,37 @@ const logger = (() => {
           config = c;
         })
         .then(() => {
+          logger("configure widget store...");
+          const storage: ZygSDKStorage = {
+            widgetId: this.widgetId as string,
+          };
+
+          if (this.customerExternalId) {
+            storage.customerExternalId = this.customerExternalId;
+          } else if (this.customerEmail) {
+            storage.customerEmail = this.customerEmail;
+          } else if (this.customerPhone) {
+            storage.customerPhone = this.customerPhone;
+          }
+
+          if (this.customerHash) {
+            storage.customerHash = this.customerHash;
+          } else {
+            const anonId = generateUUID();
+            storage.anonId = anonId;
+          }
+
+          const isStored = setLocalStorage(
+            this.widgetId as string,
+            JSON.stringify(storage)
+          );
+
+          if (!isStored) {
+            throw new Error("Error storing widget store in localStorage.");
+          }
+        })
+        .then(() => {
+          logger("create iframe widget...");
           createZygWidget(config),
             window.addEventListener("message", onMessageHandler),
             window.addEventListener("resize", handlePageWidthChange);
