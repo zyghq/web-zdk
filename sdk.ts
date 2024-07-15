@@ -17,6 +17,7 @@ interface ZygSDKInstance {
   init: (config: InitConfig) => void;
   _eventTarget: EventTarget;
   _triggerEvent: (eventName: string, data: any) => void;
+  onMessageHandler: (evt: MessageEvent) => void;
 }
 
 type ZygSDKFunction = {
@@ -89,6 +90,18 @@ function setLocalStorage(key: string, value: string): boolean {
   }
 }
 
+function getLocalStorage(key: string): string {
+  try {
+    if (typeof window !== "undefined" && window.localStorage) {
+      return localStorage.getItem(key);
+    }
+    return null;
+  } catch (error) {
+    console.error("Error getting localStorage:", error);
+    return null;
+  }
+}
+
 /**
  * Generates a UUID v4 (random)
  * @returns A string representing a UUID v4
@@ -112,9 +125,9 @@ function generateUUID(): string {
   var isHidden = !0;
   var pageWidth = window.innerWidth;
 
-  const baseUrl = "https://example.com";
+  const baseUrl = "http://localhost:3000";
 
-  function loadWidgetConfig(widgetId: string): Promise<WidgetConfig> {
+  function fetchWidgetConfig(widgetId: string): Promise<WidgetConfig> {
     logger("TODO:fetch widget config!", widgetId);
     const response = {
       allowOnlyDomains: false,
@@ -147,14 +160,18 @@ function generateUUID(): string {
     isHidden = !1;
   }
 
-  function onMessageHandler(evt: MessageEvent) {
-    console.log("origin:", evt.origin);
-    console.log("source", evt.source);
-    console.log("data", evt.data);
-    if (evt.origin !== baseUrl) return;
-    if (evt.data === "close") {
-      hideZW();
-    }
+  function handleIfcReady(widgetId: string) {
+    logger("handleIfcReady", widgetId);
+    // fetch data from localstorage
+    const data = getLocalStorage(widgetId);
+    const iframe: HTMLIFrameElement = document.getElementById(
+      "zyg-iframe"
+    ) as HTMLIFrameElement;
+    const message = {
+      type: "customer",
+      data: data,
+    };
+    iframe.contentWindow.postMessage(JSON.stringify(message), baseUrl);
   }
 
   function handlePageWidthChange() {
@@ -162,7 +179,7 @@ function generateUUID(): string {
     var t = document.getElementById("zyg-frame"),
       e =
         pageWidth > 768
-          ? "width: 448px; height: 85vh; max-height: 820px;"
+          ? "width: 448px; height: 72vh; max-height: 720px;"
           : "width: 100%; height: 100%; max-height: 100%; min-height: 100%; left: 0px; right: 0px; bottom: 0px; top: 0px;",
       i =
         "right" === config.bubblePosition
@@ -194,7 +211,7 @@ function generateUUID(): string {
     // add styling
     var fcs =
         pageWidth > 768
-          ? "width: 448px; height: 85vh; max-height: 820px"
+          ? "width: 448px; height: 72vh; max-height: 720px"
           : "width: 100%; height: 100%; max-height: 100%; min-height: 100%; left: 0px; right: 0px; bottom: 0px; top: 0px;",
       bbp =
         config.bubblePosition && "right" === config.bubblePosition
@@ -277,6 +294,24 @@ function generateUUID(): string {
     instance._triggerEvent = function (eventName, data) {
       const event = new CustomEvent(eventName, { detail: data });
       this._eventTarget.dispatchEvent(event);
+    };
+
+    instance.onMessageHandler = function (evt: MessageEvent) {
+      logger("**************** sdk ******************");
+      logger("evt origin:", evt.origin);
+      logger("evt source", evt.source);
+      logger("evt data", evt.data);
+      if (evt.origin !== baseUrl) return;
+      if (evt.data === "close") {
+        hideZW();
+      }
+      if (evt.data === "ifc:error") {
+        logger("iframe error!");
+      }
+      if (evt.data === "ifc:ready") {
+        handleIfcReady(instance.widgetId);
+      }
+      logger("**************** sdk ******************");
     };
 
     // Initialize the queue
@@ -365,7 +400,7 @@ function generateUUID(): string {
         );
       }
 
-      loadWidgetConfig(this.widgetId)
+      fetchWidgetConfig(this.widgetId)
         .then((c) => {
           logger("fetched widget config", c);
           config = c;
@@ -376,6 +411,8 @@ function generateUUID(): string {
             widgetId: this.widgetId as string,
           };
 
+          // order of conditions matters.
+          // if customerExternalId is set, it takes precedence over customerEmail and customerPhone.
           if (this.customerExternalId) {
             storage.customerExternalId = this.customerExternalId;
           } else if (this.customerEmail) {
@@ -387,6 +424,8 @@ function generateUUID(): string {
           if (this.customerHash) {
             storage.customerHash = this.customerHash;
           } else {
+            // customer is anonymous
+            // use anonId to track anonymous sessions
             const anonId = generateUUID();
             storage.anonId = anonId;
           }
@@ -403,7 +442,7 @@ function generateUUID(): string {
         .then(() => {
           logger("create iframe widget...");
           createZygWidget(config),
-            window.addEventListener("message", onMessageHandler),
+            window.addEventListener("message", this.onMessageHandler),
             window.addEventListener("resize", handlePageWidthChange);
         })
         .catch((err) => {
