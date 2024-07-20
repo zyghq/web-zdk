@@ -30,18 +30,25 @@ interface Window {
   ZygEnv: string;
 }
 
+type KV = { [key: string]: string };
+
+// SDK init configuration
+// as passed to the SDK on initialization.
 interface InitConfig {
   widgetId: string;
   customerExternalId?: string;
   customerEmail?: string;
   customerPhone?: string;
   customerHash?: string;
+  traits?: KV;
 }
 
 type BubblePosition = "left" | "right";
 type Domains = string[] | null;
 type ProfilePicture = string | null;
 
+// Widget configuration specific to the widget
+// as configured in the console.
 interface WidgetConfig {
   allowOnlyDomains: boolean;
   domainsOnly: boolean;
@@ -59,6 +66,7 @@ interface ZygSDKStorage {
   customerEmail?: string;
   customerPhone?: string;
   customerHash?: string;
+  traits?: KV;
 }
 
 const ENV = window.ZygEnv || "production";
@@ -160,7 +168,7 @@ function generateUUID(): string {
     isHidden = !1;
   }
 
-  function handleIfcReady(widgetId: string) {
+  function handleIfcReady(widgetId: string): boolean {
     logger("handleIfcReady", widgetId);
     // fetch data from localstorage
     const data = getLocalStorage(widgetId);
@@ -172,6 +180,19 @@ function generateUUID(): string {
       data: data,
     };
     iframe.contentWindow.postMessage(JSON.stringify(message), baseUrl);
+    return true;
+  }
+
+  function handleIfcAck(widgetId: string): boolean {
+    logger("handleIfcAck", widgetId);
+    const iframe: HTMLIFrameElement = document.getElementById(
+      "zyg-iframe"
+    ) as HTMLIFrameElement;
+    const message = {
+      type: "start",
+    };
+    iframe.contentWindow.postMessage(JSON.stringify(message), baseUrl);
+    return true;
   }
 
   function handlePageWidthChange() {
@@ -311,6 +332,9 @@ function generateUUID(): string {
       if (evt.data === "ifc:ready") {
         handleIfcReady(instance.widgetId);
       }
+      if (evt.data === "ifc:ack") {
+        handleIfcAck(instance.widgetId);
+      }
       logger("**************** sdk ******************");
     };
 
@@ -385,6 +409,8 @@ function generateUUID(): string {
 
       this.customerHash = initConfig.customerHash || null;
 
+      this.traits = initConfig.traits || null;
+
       const hasCustomerIdentifier =
         !!this.customerExternalId ||
         !!this.customerEmail ||
@@ -411,7 +437,7 @@ function generateUUID(): string {
             widgetId: this.widgetId as string,
           };
 
-          // order of conditions matters.
+          // order matters.
           // if customerExternalId is set, it takes precedence over customerEmail and customerPhone.
           if (this.customerExternalId) {
             storage.customerExternalId = this.customerExternalId;
@@ -428,6 +454,10 @@ function generateUUID(): string {
             // use anonId to track anonymous sessions
             const anonId = generateUUID();
             storage.anonId = anonId;
+          }
+
+          if (this.traits) {
+            storage.traits = this.traits;
           }
 
           const isStored = setLocalStorage(

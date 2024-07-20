@@ -41,10 +41,17 @@
             }
         })();
         window.ZygEnv = "development";
-        ZygSDK("init", { widgetId: "zyg-widget-id", customerExternalId: "customer-external-id", customerHash: "customer-hash" });
+        ZygSDK("init", {
+            widgetId: "wg_cqdq05ctidu9511bvag0",
+            customerEmail: "sanchit@zyg.ai",
+            customerHash:
+                "fbd17e61410ab6af1b011b20ecb1d86d971b493930ae37f31dcb3f91e37aad61",
+            traits: {
+                name: "Sanchit Rk",
+            },
+        });
     </script>
-    <script>
-    </script>
+    <script></script>
 </head>
 
 <body>
@@ -55,12 +62,12 @@
     </p>
 
     <script>
-        window.addEventListener('zygsdk:loaded', function () {
-            window.ZygSDK.on('ready', function () {
-                console.log('ZygSDK is ready!');
+        window.addEventListener("zygsdk:loaded", function () {
+            window.ZygSDK.on("ready", function () {
+                console.log("ZygSDK is ready!");
             });
-            window.ZygSDK.on('authenticated', function () {
-                console.log('User is authenticated!');
+            window.ZygSDK.on("authenticated", function () {
+                console.log("User is authenticated!");
             });
         });
     </script>
