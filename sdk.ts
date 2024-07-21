@@ -169,7 +169,7 @@ function generateUUID(): string {
   }
 
   function handleIfcReady(widgetId: string): boolean {
-    logger("handleIfcReady", widgetId);
+    logger("on handleIfcReady...");
     // fetch data from localstorage
     const data = getLocalStorage(widgetId);
     const iframe: HTMLIFrameElement = document.getElementById(
@@ -318,7 +318,6 @@ function generateUUID(): string {
     };
 
     instance.onMessageHandler = function (evt: MessageEvent) {
-      logger("**************** sdk ******************");
       logger("evt origin:", evt.origin);
       logger("evt source", evt.source);
       logger("evt data", evt.data);
@@ -335,7 +334,6 @@ function generateUUID(): string {
       if (evt.data === "ifc:ack") {
         handleIfcAck(instance.widgetId);
       }
-      logger("**************** sdk ******************");
     };
 
     // Initialize the queue
@@ -452,8 +450,20 @@ function generateUUID(): string {
           } else {
             // customer is anonymous
             // use anonId to track anonymous sessions
-            const anonId = generateUUID();
-            storage.anonId = anonId;
+            const oldStorage = getLocalStorage(this.widgetId as string);
+            if (oldStorage) {
+              try {
+                const parsed = JSON.parse(oldStorage);
+                if (parsed.anonId) {
+                  storage.anonId = parsed.anonId;
+                }
+              } catch (e) {
+                console.error("Error parsing existing storage", e);
+                storage.anonId = generateUUID();
+              }
+            } else {
+              storage.anonId = generateUUID();
+            }
           }
 
           if (this.traits) {
