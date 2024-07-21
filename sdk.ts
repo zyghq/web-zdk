@@ -270,7 +270,7 @@ function generateUUID(): string {
             ? "right: 16px; left: unset;"
             : "left: 16px; right: unset;"),
         (pbs +=
-          "width: 50px; height: 50px; border-radius: 25px; box-shadow: rgba(0, 0, 0, 0.2) 0px 4px 8px 0px; cursor: pointer; z-index: 2147483645;"),
+          "width: 50px; height: 50px; border-radius: 25px; 0px 4px 8px 0px; cursor: pointer; z-index: 2147483645;"),
         (pbs +=
           "transition: transform 0.2s ease-in-out, opacity 0.2s ease-in-out; transform: scale(0); opacity: 0;"),
         (popButton.style.cssText = pbs);
