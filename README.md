@@ -1,0 +1,43 @@
+<div align="center">
+    <p align="center">
+    <a href="https://www.zyg.ai">
+        <h1 align="center">Zyg</h1>
+    </a>
+    <p align="center">
+        Zyg is purpose-built customer support for your SaaS products.
+        <br />
+        <a href="https://www.zyg.ai">Website</a>
+        ·
+        <a href="https://x.com/_sanchitrk">X</a>
+        ·
+        <a href="https://github.com/zyghq/zyg/issues">Issues</a>
+    </p>
+    </p>
+</div>
+
+## Usage
+
+### Enable Chat Widget
+
+```html
+<script>
+  ZygSDK("init", {
+    widgetId: "wg_cqdq05ctidu9511bvag0",
+  });
+</script>
+```
+
+### Enable Chat Widget with Customer Identity Verification
+
+```html
+<script>
+  ZygSDK("init", {
+    widgetId: "wg_cqdq05ctidu9511bvag0",
+    customerEmail: "jonny@depp.com",
+    customerHash: "lkahsodhflaskjdhfkahsdf-asndfkbn"
+    traits: {
+      name: "Jonny Depp",
+    },
+  });
+</script>
+```
