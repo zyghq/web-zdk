@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vite + React + TS</title>
+  <script>
+    (function () {
+      var windowObj = window;
+      var documentObj = document;
+
+      var ZygSDK = function () {
+        ZygSDK.enqueue(arguments);
+      };
+
+      // Initialize an empty queue
+      ZygSDK.q = [];
+
+      // Enqueue function to push events into the queue
+      ZygSDK.enqueue = function (event) {
+        ZygSDK.q.push(event);
+      };
+
+      // Assign ZygSDK function to the global window object
+      windowObj.ZygSDK = ZygSDK;
+
+      // Function to load the ZygSDK widget script
+      var loadZygSDKWidget = function () {
+        var scriptElement = documentObj.createElement("script");
+        scriptElement.setAttribute("type", "text/javascript");
+        scriptElement.setAttribute("async", "true");
+        scriptElement.setAttribute("src", "sdk.js");
+
+        var firstScript = documentObj.getElementsByTagName("script")[0];
+        firstScript.parentNode.insertBefore(scriptElement, firstScript);
+      };
+
+      if (documentObj.readyState === "complete") {
+        loadZygSDKWidget();
+      } else if (windowObj.addEventListener) {
+        windowObj.addEventListener("load", loadZygSDKWidget, false);
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

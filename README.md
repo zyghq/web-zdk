@@ -41,3 +41,29 @@
   });
 </script>
 ```
+
+#### Example Usage in a React Component
+
+[view example](examples/with-react)
+
+```jsx
+import { useEffect } from "react";
+
+declare global {
+  interface Window {
+    ZygSDK: any;
+  }
+}
+
+function App() {
+  useEffect(() => {
+    window.ZygSDK("init", {
+      widgetId: "wg_cqdq05ctidu9511bvag0",
+      traits: {
+        name: "Jonny Depp",
+      },
+    });
+  }, []);
+
+....
+```

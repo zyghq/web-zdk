@@ -4,12 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "esbuild sdk.ts --bundle --minify --sourcemap --outfile=build/sdk.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "esbuild": "^0.23.0",
     "typescript": "^5.5.3"
   }
 }
