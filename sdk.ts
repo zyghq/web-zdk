@@ -456,6 +456,8 @@ function generateUUID(): string {
                 const parsed = JSON.parse(oldStorage);
                 if (parsed.anonId) {
                   storage.anonId = parsed.anonId;
+                } else {
+                  storage.anonId = generateUUID();
                 }
               } catch (e) {
                 console.error("Error parsing existing storage", e);
