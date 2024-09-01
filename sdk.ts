@@ -6,6 +6,7 @@ interface ZygSDKInstance {
   customerEmail: string | null; // P2
   customerPhone: string | null; // P3
   customerHash: string | null;
+  isVerified?: boolean;
   processQueue: () => void;
   executeCommand: (...args: any[]) => void;
   push: (...args: any[]) => void;
@@ -41,6 +42,7 @@ interface InitConfig {
   customerPhone?: string;
   customerHash?: string;
   traits?: KV;
+  isVerified?: boolean;
 }
 
 type BubblePosition = "left" | "right";
@@ -61,12 +63,13 @@ interface WidgetConfig {
 
 interface ZygSDKStorage {
   widgetId: string;
-  anonId?: string;
+  sessionId?: string;
   customerExternalId?: string;
   customerEmail?: string;
   customerPhone?: string;
   customerHash?: string;
   traits?: KV;
+  isVerified?: boolean;
 }
 
 const ENV = window.ZygEnv || "production";
@@ -136,6 +139,7 @@ function generateUUID(): string {
   const baseUrl = "http://localhost:3000";
 
   function fetchWidgetConfig(widgetId: string): Promise<WidgetConfig> {
+    // TODO: perhaps JSON response from a cdn?
     logger("TODO:fetch widget config!", widgetId);
     const response = {
       allowOnlyDomains: false,
@@ -168,6 +172,8 @@ function generateUUID(): string {
     isHidden = !1;
   }
 
+  // handleIfcReady is triggered by post message when the iframe is ready.
+  // Inturn, sends the customer data payload to the iframe.
   function handleIfcReady(widgetId: string): boolean {
     logger("on handleIfcReady...");
     // fetch data from localstorage
@@ -176,13 +182,16 @@ function generateUUID(): string {
       "zyg-iframe"
     ) as HTMLIFrameElement;
     const message = {
-      type: "customer",
-      data: data,
+      type: "customer", // type of message being sent
+      data: data, // the data to be sent
     };
     iframe.contentWindow.postMessage(JSON.stringify(message), baseUrl);
     return true;
   }
 
+  // handleIfcAck is triggered by post message
+  // when the iframe has received the customer data and acknowledges.
+  // Inturn, sends the `start` message to the iframe.
   function handleIfcAck(widgetId: string): boolean {
     logger("handleIfcAck", widgetId);
     const iframe: HTMLIFrameElement = document.getElementById(
@@ -310,6 +319,7 @@ function generateUUID(): string {
     instance.customerEmail = null;
     instance.customerPhone = null;
     instance.customerHash = null;
+    instance.isVerified = false;
 
     instance._eventTarget = new EventTarget();
     instance._triggerEvent = function (eventName, data) {
@@ -406,6 +416,7 @@ function generateUUID(): string {
       this.customerPhone = initConfig.customerPhone || null;
 
       this.customerHash = initConfig.customerHash || null;
+      this.isVerified = initConfig.isVerified || false;
 
       this.traits = initConfig.traits || null;
 
@@ -416,11 +427,11 @@ function generateUUID(): string {
 
       if (hasCustomerIdentifier && !this.customerHash) {
         throw new Error(
-          "Invalid configuration. customerHash is required when customerExternalId, customerEmail, customerPhone are provided."
+          "Invalid configuration. `customerHash` is required when `customerExternalId`, `customerEmail`, `customerPhone` are provided."
         );
       } else if (!hasCustomerIdentifier && this.customerHash) {
         throw new Error(
-          "Invalid configuration. customerHash is required when customerExternalId, customerEmail, customerPhone are not provided."
+          "Invalid configuration. `customerHash` is required when `customerExternalId`, `customerEmail`, `customerPhone` are not provided."
         );
       }
 
@@ -449,22 +460,22 @@ function generateUUID(): string {
             storage.customerHash = this.customerHash;
           } else {
             // customer is anonymous
-            // use anonId to track anonymous sessions
+            // use sessionId to track anonymous sessions
             const oldStorage = getLocalStorage(this.widgetId as string);
             if (oldStorage) {
               try {
                 const parsed = JSON.parse(oldStorage);
-                if (parsed.anonId) {
-                  storage.anonId = parsed.anonId;
+                if (parsed.sessionId) {
+                  storage.sessionId = parsed.sessionId;
                 } else {
-                  storage.anonId = generateUUID();
+                  storage.sessionId = generateUUID();
                 }
               } catch (e) {
                 console.error("Error parsing existing storage", e);
-                storage.anonId = generateUUID();
+                storage.sessionId = generateUUID();
               }
             } else {
-              storage.anonId = generateUUID();
+              storage.sessionId = generateUUID();
             }
           }
 
@@ -491,6 +502,7 @@ function generateUUID(): string {
           console.error("Error fetching widget config", err);
         });
 
+      // TODO: fix this
       // Simulating asynchronous initialization
       setTimeout(() => {
         this._triggerEvent("ready");
