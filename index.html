@@ -1,81 +1,86 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <title>This is the title of the webpage!</title>
     <script>
-        (function () {
-            var windowObj = window;
-            var documentObj = document;
+      (function () {
+        var windowObj = window;
+        var documentObj = document;
 
-            var ZygSDK = function () {
-                ZygSDK.enqueue(arguments);
-            };
+        var ZygSDK = function () {
+          ZygSDK.enqueue(arguments);
+        };
 
-            // Initialize an empty queue
-            ZygSDK.q = [];
+        // Initialize an empty queue
+        ZygSDK.q = [];
 
-            // Enqueue function to push events into the queue
-            ZygSDK.enqueue = function (event) {
-                ZygSDK.q.push(event);
-            };
+        // Enqueue function to push events into the queue
+        ZygSDK.enqueue = function (event) {
+          ZygSDK.q.push(event);
+        };
 
-            // Assign ZygSDK function to the global window object
-            windowObj.ZygSDK = ZygSDK;
+        // Assign ZygSDK function to the global window object
+        windowObj.ZygSDK = ZygSDK;
 
-            // Function to load the ZygSDK widget script
-            var loadZygSDKWidget = function () {
-                var scriptElement = documentObj.createElement("script");
-                scriptElement.setAttribute("type", "text/javascript");
-                scriptElement.setAttribute("async", "true");
-                scriptElement.setAttribute("src", "build/sdk.js");
+        // Function to load the ZygSDK widget script
+        var loadZygSDKWidget = function () {
+          var scriptElement = documentObj.createElement("script");
+          scriptElement.setAttribute("type", "text/javascript");
+          scriptElement.setAttribute("async", "true");
+          scriptElement.setAttribute("src", "build/sdk.js");
 
-                var firstScript = documentObj.getElementsByTagName("script")[0];
-                firstScript.parentNode.insertBefore(scriptElement, firstScript);
-            };
+          var firstScript = documentObj.getElementsByTagName("script")[0];
+          firstScript.parentNode.insertBefore(scriptElement, firstScript);
+        };
 
-            if (documentObj.readyState === "complete") {
-                loadZygSDKWidget();
-            } else if (windowObj.addEventListener) {
-                windowObj.addEventListener("load", loadZygSDKWidget, false);
-            }
-        })();
-        window.ZygEnv = "development";
-        // ZygSDK("init", {
-        //     widgetId: "wdcqpq5pktidu1dh95akn0",
-        //     customerEmail: "Alexys52@gmail.com",
-        //     customerHash: "97389dc07ad04ffb58b560f80eab1cf4f9f500c6199c16deab5f90abc9b17872",
-        //     traits: {
-        //         name: "Haleigh",
-        //     },
-        // });
-        ZygSDK("init", {
-            widgetId: "wdcr51aoctidudvsmjeop0",
-            traits: {
-                name: "Lucas"
-            },
-        });
+        if (documentObj.readyState === "complete") {
+          loadZygSDKWidget();
+        } else if (windowObj.addEventListener) {
+          windowObj.addEventListener("load", loadZygSDKWidget, false);
+        }
+      })();
+      window.ZygEnv = "development";
+      // ZygSDK("init", {
+      //     widgetId: "wdcqpq5pktidu1dh95akn0",
+      //     customerEmail: "Alexys52@gmail.com",
+      //     customerHash: "97389dc07ad04ffb58b560f80eab1cf4f9f500c6199c16deab5f90abc9b17872",
+      //     traits: {
+      //         name: "Haleigh",
+      //     },
+      // });
+      ZygSDK("init", {
+        widgetId: "wdcr51aoctidudvsmjeop0",
+        customer: {
+          traits: {
+            name: "James Doe",
+          },
+        },
+        tabs: ["home", "conversations"],
+        defaultTab: "home",
+        homeLinks: [
+          {
+            id: 1,
+            title: "Book a Demo",
+            href: "https://www.zyg.ai/",
+            previewText: "Book a demo with our team",
+          },
+        ],
+      });
     </script>
-    <script></script>
-</head>
+  </head>
 
-<body>
-    <p>
-        This is an example paragraph. Anything in the <strong>body</strong> tag
-        will appear on the page, just like this <strong>p</strong> tag and its
-        contents.
-    </p>
-
+  <body>
+    <h1>Foo Bar Software</h1>
+    <p>Chat with our embedded support widget.</p>
     <script>
-        window.addEventListener("zygsdk:loaded", function () {
-            window.ZygSDK.on("ready", function () {
-                console.log("ZygSDK is ready!");
-            });
-            window.ZygSDK.on("authenticated", function () {
-                console.log("User is authenticated!");
-            });
+      window.addEventListener("zygsdk:loaded", function () {
+        window.ZygSDK.on("ready", function () {
+          console.log("ZygSDK is ready!");
         });
+        window.ZygSDK.on("authenticated", function () {
+          console.log("Customer is authenticated!");
+        });
+      });
     </script>
-</body>
-
+  </body>
 </html>
