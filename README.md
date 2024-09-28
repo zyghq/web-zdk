@@ -1,3 +1,4 @@
+
 <div align="center">
     <p align="center">
     <a href="https://www.zyg.ai">
@@ -14,6 +15,11 @@
     </p>
     </p>
 </div>
+
+## ⚠️ Deprecated
+
+This project is **deprecated** and no longer maintained. Please use [zyg-js](https://github.com/zyghq/zyg-js) for the updated version or alternative.
+
 
 ## Usage
 
